@@ -1,15 +1,14 @@
+import sys
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
-import os
-import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 load_dotenv()
 
 from algoritmo_genetico import ejecutar_algoritmo
-from database import guardar_horarios, limpiar_horarios_ia
+from services.horario_service import guardar_horarios, limpiar_horarios_ia
 
 app = Flask(__name__)
 CORS(app)
@@ -58,10 +57,7 @@ def confirmar_horarios():
         return jsonify({"error": "horarios, per_id y car_id son obligatorios"}), 400
 
     try:
-        # Limpiar horarios generados anteriormente por IA
         eliminados = limpiar_horarios_ia(per_id, car_id)
-
-        # Guardar los nuevos
         ids = guardar_horarios(horarios)
 
         return jsonify(
