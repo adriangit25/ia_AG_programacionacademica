@@ -1,0 +1,13 @@
+services:
+  ia:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pucesi-ia
+    ports:
+      - "5050:5050"
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=host.docker.internal
+    restart: unless-stopped
