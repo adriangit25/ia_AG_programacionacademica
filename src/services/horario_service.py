@@ -6,9 +6,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.database import ejecutar_query, ejecutar_update, get_connection
 
 
-def obtener_programacion(per_id, car_id):
-    return ejecutar_query(
-        """
+def obtener_programacion(per_id, car_id, nivel=None, par_id=None):
+    query = """
         SELECT pa.pra_id, pa.mat_id, pa.doc_id, pa.aul_id, pa.pra_nivel, pa.par_id,
                m.mat_nombre, m.mat_codigo, m.mat_horas_docencia, m.mat_horas_practicas,
                m.arc_id, pe.per_semanas
@@ -16,10 +15,19 @@ def obtener_programacion(per_id, car_id):
         INNER JOIN tbl_materias m ON pa.mat_id = m.mat_id
         INNER JOIN tbl_periodos pe ON pa.per_id = pe.per_id
         WHERE pa.per_id = %s AND pa.car_id = %s AND pa.pra_estado = TRUE
-        ORDER BY pa.pra_nivel, m.mat_nombre
-    """,
-        (per_id, car_id),
-    )
+    """
+    params = [per_id, car_id]
+
+    if nivel is not None:
+        query += " AND pa.pra_nivel = %s"
+        params.append(nivel)
+
+    if par_id is not None:
+        query += " AND pa.par_id = %s"
+        params.append(par_id)
+
+    query += " ORDER BY pa.pra_nivel, m.mat_nombre"
+    return ejecutar_query(query, tuple(params))
 
 
 def obtener_docentes(esc_id):
@@ -92,7 +100,7 @@ def limpiar_horarios_ia(per_id, car_id):
     )
 
 
-def generar_clases(materias):
+def generar_clases(materias, duracion_min=2, duracion_max=3):
     clases = []
     for mat in materias:
         semanas = mat["per_semanas"] or 16
@@ -102,10 +110,12 @@ def generar_clases(materias):
 
         horas_restantes = horas_semana
         while horas_restantes > 0:
-            if horas_restantes >= 2:
-                duracion = 2
+            if horas_restantes >= duracion_max:
+                duracion = duracion_max
+            elif horas_restantes >= duracion_min:
+                duracion = horas_restantes
             else:
-                duracion = 1
+                duracion = horas_restantes
             clases.append(
                 {
                     "pra_id": mat["pra_id"],

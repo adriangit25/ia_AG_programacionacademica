@@ -29,8 +29,18 @@ def generar_horarios():
     if not per_id or not car_id or not esc_id:
         return jsonify({"error": "per_id, car_id y esc_id son obligatorios"}), 400
 
+    config = {
+        "nivel": data.get("nivel"),
+        "par_id": data.get("par_id"),
+        "dias_permitidos": data.get("dias_permitidos"),
+        "hora_inicio": data.get("hora_inicio", 7),
+        "hora_fin": data.get("hora_fin", 21),
+        "duracion_min": data.get("duracion_min", 2),
+        "duracion_max": data.get("duracion_max", 3),
+    }
+
     try:
-        resultado = ejecutar_algoritmo(per_id, car_id, esc_id)
+        resultado = ejecutar_algoritmo(per_id, car_id, esc_id, config)
 
         if "error" in resultado:
             return jsonify(resultado), 400
